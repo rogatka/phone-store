@@ -2,6 +2,7 @@ package com.epam.store.service;
 
 import com.epam.store.dao.*;
 import com.epam.store.entity.*;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -111,6 +112,7 @@ public class OrderServiceImpl implements OrderService {
         order.setTotalSum(orderTotalSum);
     }
 
+    @Override
     public void deleteOrderCard(Long orderId, Long orderCardId) {
         Objects.requireNonNull(orderId, ID_MUST_NOT_BE_NULL);
         Objects.requireNonNull(orderCardId, ORDER_CARD_ID_MUST_NOT_BE_NULL);
@@ -121,16 +123,21 @@ public class OrderServiceImpl implements OrderService {
         Optional<OrderCard> orderCardOptional = orderCardDAO.findById(orderCardId);
         if (orderCardOptional.isPresent()) {
             OrderCard orderCard = orderCardOptional.get();
-            calculateOrderTotalSum(orderCard, order, true);
             List<OrderCard> orderCards = orderCardDAO.findAllByOrderId(orderId);
             orderCards.removeIf((e) -> e.getId().equals(orderCardId));
             order.setOrderCards(orderCards);
+            order.setTotalSum(calculateOrderTotalSum(orderCards));
+
+            Phone phone = orderCard.getPhone();
+            Long phoneCount = phone.getCount();
+            phone.setCount(phoneCount + orderCard.getItemCount());
             orderDAO.save(order);
         } else {
             throw new IllegalArgumentException("Order card with id =" + orderCardId + "is not found");
         }
     }
 
+    @Override
     public void addOrderCard(Long orderId, OrderCard orderCard) {
         Objects.requireNonNull(orderId, ID_MUST_NOT_BE_NULL);
         Objects.requireNonNull(orderCard, ORDER_CARD_MUST_NOT_BE_NULL);
@@ -144,52 +151,64 @@ public class OrderServiceImpl implements OrderService {
             }
             throw new IllegalArgumentException(errorMessage);
         }
-        calculateOrderTotalSum(orderCard, order, false);
-        List<OrderCard> orderCards = orderCardDAO.findAllByOrderId(orderId);
+        List<OrderCard> orderCards = orderCardDAO.findAllByOrderId(orderId);;
         if (orderCard.getId() == null) {
+            Phone phone = phoneDAO.findById(orderCard.getPhone().getId()).get();
+            Long itemCount = orderCard.getItemCount();
+            Long phoneCount = phone.getCount();
+            if (phoneCount < itemCount) {
+                throw new IllegalArgumentException("Item count must be less or equal to phone count. Phone count: " + phoneCount + ". Item count: " + itemCount);
+            }
+            phone.setCount(phoneCount - itemCount);
+            orderCard.setPhone(phone);
             orderCards.add(orderCard);
         } else {
-            Optional<OrderCard> cardOptional = orderCards.stream().filter((oc) -> oc.getId().equals(orderCard.getId())).findFirst();
+            Optional<OrderCard> cardOptional = order.getOrderCards()
+                    .stream()
+                    .filter((oc) -> oc.getId().equals(orderCard.getId()))
+                    .findFirst();
             if (cardOptional.isPresent()) {
                 OrderCard card = cardOptional.get();
-                card.setOrder(orderCard.getOrder());
-                card.setPhone(orderCard.getPhone());
-                card.setItemCount(orderCard.getItemCount());
+                long previousItemCount = card.getItemCount();
+                Phone previousPhone = card.getPhone();
+                long newItemCount = orderCard.getItemCount();
+                Phone newPhone = phoneDAO.findById(orderCard.getPhone().getId()).get();
+                Long newPhoneCount = newPhone.getCount();
+                if (!previousPhone.getId().equals(newPhone.getId())) {
+                    Phone oldPhone = phoneDAO.findById(previousPhone.getId()).get();
+                    Long oldPhoneCount = oldPhone.getCount();
+                    oldPhone.setCount(oldPhoneCount + previousItemCount);
+                    if (newPhoneCount < newItemCount) {
+                        throw new IllegalArgumentException("Item count must be less or equal to phone count. Phone count: " + newPhoneCount + ". Item count: " + newItemCount);
+                    }
+                    newPhone.setCount(newPhoneCount - newItemCount);
+                } else {
+                    if ((newPhoneCount + previousItemCount) < newItemCount) {
+                        throw new IllegalArgumentException("Item count must be less or equal to phone count. Phone count: " + newPhoneCount + ". Item count: " + newItemCount);
+                    }
+                    newPhone.setCount(newPhoneCount - (newItemCount - previousItemCount));
+                }
+                card.setPhone(newPhone);
+                card.setItemCount(newItemCount);
             } else {
                 throw new IllegalArgumentException("Order card with id =" + orderCard.getId() + "is not found");
             }
         }
         order.setOrderCards(orderCards);
+        order.setTotalSum(calculateOrderTotalSum(orderCards));
         orderDAO.save(order);
     }
 
-    private void calculateOrderTotalSum(OrderCard orderCard, Order order, boolean isDelete) {
-        BigDecimal orderTotalSum = order.getTotalSum();
-        if (orderTotalSum == null) {
-            orderTotalSum = BigDecimal.ZERO;
-            BigDecimal phonePrice;
-            Long itemCount;
-            List<OrderCard> orderCards = orderCardDAO.findAllByOrderId(order.getId());
-            for (OrderCard card : orderCards) {
-                itemCount = card.getItemCount();
-                phonePrice = card.getPhone().getPrice();
-                orderTotalSum = orderTotalSum.add(phonePrice.multiply(BigDecimal.valueOf(itemCount)));
-            }
+    private BigDecimal calculateOrderTotalSum(List<OrderCard> orderCards) {
+        BigDecimal orderTotalSum = BigDecimal.ZERO;
+        BigDecimal phonePrice;
+        Long itemCount;
+        for (OrderCard card : orderCards) {
+            itemCount = card.getItemCount();
+            phonePrice = card.getPhone().getPrice();
+            orderTotalSum = orderTotalSum.add(phonePrice.multiply(BigDecimal.valueOf(itemCount)));
         }
-        Phone phone = orderCard.getPhone();
-        BigDecimal phonePrice = phone.getPrice();
-        Long itemCount = orderCard.getItemCount();
-        Long phoneCount = phone.getCount();
-        if (phoneCount < itemCount) {
-            throw new IllegalArgumentException("Item count must be less or equal to phone count. Phone count: " + phoneCount + ". Item count: " + itemCount);
-        }
-        if (!isDelete) {
-            phone.setCount(phoneCount - itemCount);
-            order.setTotalSum(orderTotalSum.add(phonePrice.multiply(BigDecimal.valueOf(itemCount))));
-        } else {
-            phone.setCount(phoneCount + itemCount);
-            order.setTotalSum(orderTotalSum.subtract(phonePrice.multiply(BigDecimal.valueOf(itemCount))));
-        }
+        return orderTotalSum;
     }
 
     @Override
@@ -200,6 +219,17 @@ public class OrderServiceImpl implements OrderService {
             Order order = orderOptional.get();
             if (order.getStatus() == OrderStatus.PROCESSING) {
                 throw new IllegalArgumentException("Cannot delete order because it has processing status, order id=" + order.getId());
+            } else if (order.getStatus() == OrderStatus.NOT_STARTED) {
+                Map<Phone, Long> phonesCount = new HashMap<>();
+                List<Phone> phones = phoneDAO.findAll();
+                phones.forEach((p) -> phonesCount.put(p,p.getCount()));
+                List<OrderCard> orderCards = orderCardDAO.findAllByOrderId(id);
+                for (OrderCard orderCard: orderCards) {
+                    Phone phone = orderCard.getPhone();
+                    Long itemCount = orderCard.getItemCount();
+                    phonesCount.merge(phone, itemCount, (a,b) -> a + b);
+                }
+                phonesCount.forEach(Phone::setCount);
             }
         }
         orderDAO.deleteById(id);

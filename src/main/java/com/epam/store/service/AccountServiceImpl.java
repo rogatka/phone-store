@@ -47,7 +47,6 @@ public class AccountServiceImpl implements AccountService {
         return accountDAO.save(account);
     }
 
-    @Override
     public void deleteById(Long id) {
         Objects.requireNonNull(id, ID_MUST_NOT_BE_NULL);
         List<Order> orders = orderDAO.findAllByAccountId(id);
@@ -55,6 +54,8 @@ public class AccountServiceImpl implements AccountService {
             for (Order order: orders) {
                 if (order.getStatus() == OrderStatus.PROCESSING) {
                     throw new IllegalArgumentException(String.format("Cannot delete account with id=%d because there is processing order(id=%d) with that account", id, order.getId()));
+                } else if (order.getStatus() == OrderStatus.NOT_STARTED) {
+                    throw new IllegalArgumentException(String.format("Cannot delete account with id=%d. Please first manually delete not started orders", id));
                 }
             }
         }

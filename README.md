@@ -2,7 +2,7 @@
 # Spring-MVC 
 
 Для тестирования работы приложения можно использовать файлы create-tables.sql, populate-tables.sql.
-Задать параметры для базы можно в файле /resources/persistence.properties 
+Задать параметры для базы можно в файле test/resources/persistence.properties 
 
 Имеются классы: 
 - User (firstname, lastname)

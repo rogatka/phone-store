@@ -2,8 +2,11 @@ package com.epam.store.controller.rest;
 
 import com.epam.store.config.WebJavaConfig;
 import com.epam.store.entity.Account;
+import com.epam.store.entity.Order;
+import com.epam.store.entity.OrderStatus;
 import com.epam.store.entity.User;
 import com.epam.store.service.AccountService;
+import com.epam.store.service.OrderService;
 import com.epam.store.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
@@ -26,6 +29,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -47,6 +51,9 @@ public class TestAccountController {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private OrderService orderService;
 
     @Autowired
     private UserService userService;
@@ -222,6 +229,12 @@ public class TestAccountController {
 
     @Test
     public void deleteAccountShouldReturn200IfValidRequest() throws Exception {
+        List<Order> orders = orderService.findAllByAccountId(2L);
+        for (Order order: orders) {
+            order.setStatus(OrderStatus.READY);
+            order.setTotalSum(BigDecimal.ONE);
+            orderService.save(order);
+        }
         mockMvc.perform(delete("/accounts/2"))
                 .andExpect(status().isOk())
                 .andDo(print());

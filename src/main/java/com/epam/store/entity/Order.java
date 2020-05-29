@@ -65,10 +65,12 @@ public class Order {
     }
 
     public void setOrderCards(List<OrderCard> orderCards) {
-        for (OrderCard orderCard: orderCards) {
-            orderCard.setOrder(this);
+        if (this.orderCards == null) {
+            this.orderCards = orderCards;
+        } else {
+            this.orderCards.clear();
+            this.orderCards.addAll(orderCards);
         }
-        this.orderCards = orderCards;
     }
 
     public BigDecimal getTotalSum() {

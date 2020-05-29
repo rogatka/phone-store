@@ -73,15 +73,12 @@ public class Phone {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Phone phone = (Phone) o;
-        return Objects.equals(id, phone.id) &&
-                Objects.equals(model, phone.model) &&
-                Objects.equals(price, phone.price) &&
-                Objects.equals(count, phone.count);
+        return Objects.equals(id, phone.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, model, price, count);
+        return Objects.hash(id);
     }
 
     @Override

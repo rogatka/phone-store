@@ -28,6 +28,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.sql.DataSource;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -208,9 +209,9 @@ public class TestUserController {
         List<Order> orders = orderService.findAllByAccountId(account.getId());
         for (Order order: orders) {
             order.setStatus(OrderStatus.READY);
+            order.setTotalSum(BigDecimal.ONE);
+            orderService.save(order);
         }
-        account.setOrders(orders);
-        accountService.save(account);
         accountService.deleteById(account.getId());
         mockMvc.perform(delete("/users/1"))
                 .andExpect(status().isOk())

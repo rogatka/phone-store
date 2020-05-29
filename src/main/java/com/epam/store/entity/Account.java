@@ -23,7 +23,7 @@ public class Account {
     @NotNull
     private User user;
 
-    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "account", fetch = FetchType.LAZY)
     @JsonIgnore
     private List<Order> orders;
 
@@ -51,7 +51,12 @@ public class Account {
     }
 
     public void setOrders(List<Order> orders) {
-        this.orders = orders;
+        if (this.orders == null) {
+            this.orders = orders;
+        } else {
+            this.orders.clear();
+            this.orders.addAll(orders);
+        }
     }
 
     public BigDecimal getAmount() {

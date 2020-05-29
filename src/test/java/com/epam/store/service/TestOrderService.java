@@ -39,6 +39,8 @@ public class TestOrderService {
 
     @Mock
     private OrderDAO orderDAO;
+    @Mock
+    private PhoneDAO phoneDAO;
 
     @Mock
     private OrderCardDAO orderCardDAO;
@@ -141,9 +143,11 @@ public class TestOrderService {
         orderCard.setPhone(phone);
         orderCard.setItemCount(1000L);
         when(orderCardDAO.findAllByOrderId(any())).thenReturn(Collections.singletonList(orderCard));
+        when(phoneDAO.findById(any())).thenReturn(Optional.of(phone));
         Order order = new Order();
         order.setId(1L);
         order.setStatus(OrderStatus.NOT_STARTED);
+        orderCard.setOrder(order);
         when(orderDAO.findById(anyLong())).thenReturn(Optional.of(order));
         assertThatThrownBy(() ->
                 orderService.addOrderCard(order.getId(), orderCard))
