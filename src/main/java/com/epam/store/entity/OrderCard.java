@@ -19,7 +19,7 @@ public class OrderCard {
     @JoinColumn(name = "order_id")
     private Order order;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "phone_id")
     @NotNull
     private Phone phone;

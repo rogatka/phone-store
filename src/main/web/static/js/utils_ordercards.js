@@ -170,6 +170,7 @@
 
     orderCardUtils.ajax.getPhones = function () {
         orderCardUtils.spinner.showSpinner();
+        orderCardUtils.store.phones = [];
         return window.axios
             .get(this.phonesUrl)
             .then((response) => {
@@ -255,6 +256,7 @@
 
     orderCardUtils.orderCard = {};
     orderCardUtils.orderCard.refreshTable = function () {
+        orderCardUtils.ajax.getPhones();
         orderCardUtils.ajax.getOrderById().then((data) => {
             orderCardUtils.ajax.getOrderCardsByOrderId().then((data) => {
                 orderCardUtils.orderCard.cleanTable();
@@ -337,7 +339,6 @@
     };
 
     orderCardUtils.phone = {};
-    //создает локацию исходя из переданного имени???
     orderCardUtils.phone.createDropDownElement = function createPhone(model) {
         const phone = document.createElement('div');
         phone.classList.add('ordercards-dropdown-phone');

@@ -1,27 +1,18 @@
 package com.epam.store.service;
 
 import com.epam.store.config.ConfigService;
-import com.epam.store.config.WebJavaConfig;
 import com.epam.store.dao.*;
 import com.epam.store.entity.*;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.web.WebAppConfiguration;
 
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -104,7 +95,7 @@ public class TestOrderService {
         assertThatThrownBy(() ->
                 orderService.save(order))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageStartingWith("New order");
+                .hasMessageStartingWith("Just created order order");
     }
 
     @Test
@@ -150,7 +141,7 @@ public class TestOrderService {
         orderCard.setOrder(order);
         when(orderDAO.findById(anyLong())).thenReturn(Optional.of(order));
         assertThatThrownBy(() ->
-                orderService.addOrderCard(order.getId(), orderCard))
+                orderService.saveOrderCard(order.getId(), orderCard))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageStartingWith("Item count");
     }

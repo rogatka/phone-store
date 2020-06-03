@@ -44,18 +44,20 @@ public class PhoneDAOImpl implements PhoneDAO {
 
     @Override
     public Optional<Phone> findByModelName(String modelName) {
-        Phone phone;
+        Optional<Phone> phone;
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         TypedQuery<Phone> query = entityManager.createQuery("from Phone where model like :modelName", Phone.class)
                 .setParameter("modelName", modelName.trim());
         List<Phone> phones = query.getResultList();
         if (phones.isEmpty()) {
-            return Optional.empty();
+            phone = Optional.empty();
         } else if (phones.size() > 1) {
             throw new RuntimeException("More than 1 phones with same model was found. Founded phones=" + phones.size() + ".Model name=" + modelName);
+        } else {
+            phone = Optional.of(phones.get(0));
         }
         entityManager.close();
-        return Optional.of(phones.get(0));
+        return phone;
     }
 
     @Override

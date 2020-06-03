@@ -1,6 +1,9 @@
 package com.epam.store.dao;
 
+import com.epam.store.entity.Account;
 import com.epam.store.entity.Order;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import javax.persistence.*;
 import java.util.List;
@@ -29,7 +32,7 @@ public class OrderDAOImpl implements OrderDAO {
         List<Order> orders;
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         TypedQuery<Order> query = entityManager.createQuery("select o from Order o where o.account.id=:id", Order.class)
-                .setParameter("id",id);
+                .setParameter("id", id);
         orders = query.getResultList();
         entityManager.close();
         return orders;
@@ -37,11 +40,19 @@ public class OrderDAOImpl implements OrderDAO {
 
     @Override
     public Optional<Order> findById(Long id) {
-        Order order;
+        List<Order> orders;
+        Optional<Order> order;
         EntityManager entityManager = entityManagerFactory.createEntityManager();
-        order = entityManager.find(Order.class, id);
+        Query query = entityManager.createQuery("select o from Order o LEFT join fetch o.orderCards oc where o.id=:id")
+                .setParameter("id", id);
+        orders = query.getResultList();
+        if (orders.isEmpty()) {
+            order = Optional.empty();
+        } else {
+            order = Optional.of(orders.get(0));
+        }
         entityManager.close();
-        return Optional.ofNullable(order);
+        return order;
     }
 
     @Override
@@ -57,7 +68,7 @@ public class OrderDAOImpl implements OrderDAO {
             }
             transaction.commit();
             return order;
-        } catch (EntityExistsException|IllegalArgumentException e) {
+        } catch (EntityExistsException | IllegalArgumentException e) {
             transaction.rollback();
             throw new IllegalArgumentException(e);
         } finally {
@@ -70,8 +81,8 @@ public class OrderDAOImpl implements OrderDAO {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         EntityTransaction transaction = entityManager.getTransaction();
         transaction.begin();
-            Query query = entityManager.createQuery("delete from Order where id=:id")
-                    .setParameter("id",id);
+        Query query = entityManager.createQuery("delete from Order where id=:id")
+                .setParameter("id", id);
         try {
             query.executeUpdate();
             transaction.commit();

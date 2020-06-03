@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
         Objects.requireNonNull(id, ID_MUST_NOT_BE_NULL);
         Optional<Account> account = accountDAO.findByUserId(id);
         if (account.isPresent()) {
-            throw new IllegalArgumentException(String.format("Cannot delete user with id=%d because there is account with id=%d referenced that user", id, account.get().getId()));
+            throw new IllegalArgumentException(String.format("Cannot delete user with id=%d because there is account with id=%d which referenced to that user", id, account.get().getId()));
         }
         userDAO.deleteById(id);
     }

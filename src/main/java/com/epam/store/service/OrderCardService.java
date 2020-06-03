@@ -1,6 +1,5 @@
 package com.epam.store.service;
 
-import com.epam.store.entity.Order;
 import com.epam.store.entity.OrderCard;
 
 import java.util.List;

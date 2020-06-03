@@ -58,14 +58,18 @@ public class PhoneServiceImpl implements PhoneService {
     @Override
     public void deleteById(Long id) {
         Objects.requireNonNull(id, ID_MUST_NOT_BE_NULL);
-        List<OrderCard> orderCards = orderCardDAO.findAllByPhoneId(id);
+        checkOrdersStatus(id);
+        phoneDAO.deleteById(id);
+    }
+
+    private void checkOrdersStatus(Long phoneId) {
+        List<OrderCard> orderCards = orderCardDAO.findAllByPhoneId(phoneId);
         if (!orderCards.isEmpty()) {
             for (OrderCard orderCard : orderCards) {
                 if (orderCard.getOrder().getStatus() == OrderStatus.PROCESSING) {
-                    throw new IllegalArgumentException(String.format("Cannot delete phone with id=%d because there is processing order(id=%d) with that phone", id, orderCard.getOrder().getId()));
+                    throw new IllegalArgumentException(String.format("Cannot delete phone with id=%d because there is processing order(id=%d) with that phone", phoneId, orderCard.getOrder().getId()));
                 }
             }
         }
-        phoneDAO.deleteById(id);
     }
 }

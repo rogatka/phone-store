@@ -42,7 +42,7 @@ public class AccountDAOImpl implements AccountDAO {
         if (accounts.isEmpty()) {
             return Optional.empty();
         } else if (accounts.size() > 1) {
-            throw new RuntimeException("More than 1 account with same user was found. Founded accounts=" + accounts.size() + ".User Id=" + userId);
+            throw new RuntimeException("More than 1 account with same user was found. Founded accounts=" + accounts + ".User Id=" + userId);
         }
         entityManager.close();
         return Optional.of(accounts.get(0));

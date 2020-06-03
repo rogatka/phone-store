@@ -62,13 +62,13 @@
 
         document.body.querySelector('.orders-info')
             .addEventListener('click', () => {
+                accountUtils.order.cleanTable();
                 accountUtils.order.fillTable();
                 document.body.querySelector('.orders-table').style.display = '';
             });
         document.body.querySelector('.create-order')
             .addEventListener('click', () => {
                 accountUtils.spinner.showSpinner();
-                // const accountId = document.body.querySelector('.edit-account-id').value;
                 const accountId = accountUtils.store.account.id;
                 let order = {
                     id: null,
@@ -245,7 +245,6 @@
                 accountUtils.ajax.getOrdersByAccountId(accountUtils.store.account.id)
                     .then((response) => {
                         accountUtils.account.fillTable();
-                        // accountUtils.order.fillTable();
                     })
             }
         })

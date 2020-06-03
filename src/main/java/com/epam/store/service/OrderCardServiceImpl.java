@@ -2,25 +2,18 @@ package com.epam.store.service;
 
 import com.epam.store.dao.OrderCardDAO;
 import com.epam.store.dao.OrderDAO;
-import com.epam.store.entity.Order;
 import com.epam.store.entity.OrderCard;
 import com.epam.store.entity.OrderStatus;
-import com.epam.store.entity.Phone;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.epam.store.exception.OrderStatusException;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 public class OrderCardServiceImpl implements OrderCardService {
     public static final String ORDER_CARD_MUST_NOT_BE_NULL = "Order card must not be null";
     public static final String ORDER_ID_MUST_NOT_BE_NULL = "Order id must not be null";
     public static final String PHONE_ID_MUST_NOT_BE_NULL = "Phone id must not be null";
-    public static final String ORDER_MUST_NOT_BE_NULL = "Order must not be null";
 
     private OrderCardDAO orderCardDAO;
     private OrderDAO orderDAO;
@@ -71,7 +64,7 @@ public class OrderCardServiceImpl implements OrderCardService {
         if (orderCardOptional.isPresent()) {
             OrderCard orderCard = orderCardOptional.get();
             if (orderCard.getOrder().getStatus() == OrderStatus.PROCESSING) {
-                throw new IllegalArgumentException("Cannot delete orderCard because order has processing status, order id=" + orderCard.getOrder().getId());
+                throw new OrderStatusException("Cannot delete orderCard because order has processing status, order id=" + orderCard.getOrder().getId());
             }
         }
         orderCardDAO.deleteById(id);

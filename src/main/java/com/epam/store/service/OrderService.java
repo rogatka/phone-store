@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface OrderService extends AbstractService<Order, Long> {
     List<Order> findAllByAccountId(Long id);
-    void addOrderCard(Long orderId, OrderCard orderCard);
+    void saveOrderCard(Long orderId, OrderCard orderCard);
     void deleteOrderCard(Long orderId, Long orderCardId);
 }

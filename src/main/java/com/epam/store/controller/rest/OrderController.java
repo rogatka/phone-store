@@ -58,7 +58,7 @@ public class OrderController {
     @PostMapping("/{id}/add")
     public void addOrderCard(@RequestBody OrderCard orderCard, @PathVariable Long id) throws NotFoundException {
         if (orderService.findById(id).isPresent()) {
-            orderService.addOrderCard(id, orderCard);
+            orderService.saveOrderCard(id, orderCard);
         } else {
             throw new NotFoundException("order with id = " + id + " not exist");
         }
