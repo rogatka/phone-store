@@ -75,8 +75,12 @@ public class OrderServiceImpl implements OrderService {
             if (order.getStatus() != OrderStatus.NOT_STARTED && (orderCards.isEmpty())) {
                 throw new IllegalArgumentException(STARTED_ORDER_CANNOT_HAVE_EMPTY_ORDER_CARDS);
             }
+            Order orderFromDb = orderDAO.findById(order.getId()).get();
+            if (orderFromDb.getStatus() != order.getStatus()) {
+                addOrderStatus(order, order.getStatus());
+            }
         }
-        calculateAccountAmount(order, order.getStatus());
+        calculateAccountAmount(order, orderCards);
         return orderDAO.save(order);
     }
 
@@ -96,14 +100,14 @@ public class OrderServiceImpl implements OrderService {
         order.setOrderStatusHistoryList(orderStatusHistoryList);
     }
 
-    private void calculateAccountAmount(Order order, OrderStatus status) {
+    private void calculateAccountAmount(Order order, List<OrderCard> orderCards) {
         Account account = order.getAccount();
         Objects.requireNonNull(account, ACCOUNT_MUST_NOT_BE_NULL);
         BigDecimal orderTotalSum = order.getTotalSum();
         BigDecimal accountAmount = account.getAmount();
-        if (status == OrderStatus.CANCEL) {
+        if (order.getStatus() == OrderStatus.CANCEL) {
             account.setAmount(accountAmount.add(orderTotalSum));
-            calculatePhoneCount(order.getOrderCards());
+            calculatePhoneCount(orderCards);
         } else {
             if (accountAmount.compareTo(orderTotalSum) < 0) {
                 throw new IllegalArgumentException("Order's total sum must be less or equal to account's amount");
@@ -131,10 +135,10 @@ public class OrderServiceImpl implements OrderService {
                     .filter((oc) -> oc.getPhone().getId().equals(phone.getId()))
                     .forEach((oc) -> oc.setPhone(phone));
             orderDAO.save(order);
-
-            orderCards.removeIf((e) -> e.getId().equals(orderCardId));
+            orderCards.removeIf((oc) -> oc.getId().equals(orderCardId));
             order.setTotalSum(calculateOrderCardsTotalSum(orderCards));
             orderDAO.save(order);
+            orderCardDAO.deleteById(orderCardId);
         } else {
             throw new IllegalArgumentException("Order card with id =" + orderCardId + "is not found");
         }
@@ -198,16 +202,13 @@ public class OrderServiceImpl implements OrderService {
         Phone phone = orderCard.getPhone();
         Long itemCount = orderCard.getItemCount();
         Long phoneCount = phone.getCount();
-        System.out.println(phoneCount);
         if (phoneCount < itemCount) {
             throw new IllegalArgumentException("Item count must be less or equal to phone count. Phone count: " + phoneCount + ". Item count: " + itemCount);
         }
         phone.setCount(phoneCount - itemCount);
-        System.out.println(phone.getCount());
         orderCards.stream()
                 .filter((oc) -> oc.getPhone().getId().equals(phone.getId()))
                 .forEach((oc) -> oc.setPhone(phone));
-        System.out.println(orderCards);
         orderCards.add(orderCard);
         order.setTotalSum(calculateOrderCardsTotalSum(orderCards));
         orderDAO.save(order);

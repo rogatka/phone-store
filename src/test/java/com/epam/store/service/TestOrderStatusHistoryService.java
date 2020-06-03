@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ContextConfiguration(classes = {ConfigService.class})
 @ExtendWith(SpringExtension.class)
-//@WebAppConfiguration
 public class TestOrderStatusHistoryService {
     @InjectMocks
     private OrderStatusHistoryServiceImpl orderStatusHistoryService;

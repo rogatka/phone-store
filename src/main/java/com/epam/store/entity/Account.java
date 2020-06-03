@@ -72,14 +72,12 @@ public class Account {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Account account = (Account) o;
-        return Objects.equals(id, account.id) &&
-                Objects.equals(user, account.user) &&
-                Objects.equals(amount, account.amount);
+        return Objects.equals(id, account.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, user, amount);
+        return Objects.hash(id);
     }
 
     @Override

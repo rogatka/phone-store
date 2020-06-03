@@ -21,7 +21,7 @@ public class Order {
     @NotNull
     private Account account;
 
-    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "order", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore
     private List<OrderCard> orderCards;
 
@@ -90,13 +90,12 @@ public class Order {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Order order = (Order) o;
-        return Objects.equals(id, order.id) &&
-                Objects.equals(account, order.account);
+        return Objects.equals(id, order.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, account);
+        return Objects.hash(id);
     }
 
     @Override

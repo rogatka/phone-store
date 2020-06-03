@@ -207,6 +207,7 @@
 
     orderCardUtils.ajax.getOrderCardsByOrderId = function () {
         orderCardUtils.spinner.showSpinner();
+        orderCardUtils.store.orderCards = [];
         return window.axios
             .get(`${this.ordercardsUrl}/order/${orderCardUtils.store.order.id}`)
             .then((response) => {
@@ -273,8 +274,8 @@
         orderCardUtils.spinner.showSpinner();
         orderCardUtils.ajax.deleteOrderCard(orderCard.id)
             .then((response) => {
-                orderCardUtils.spinner.hideSpinner();
                 orderCardUtils.orderCard.refreshTable();
+                orderCardUtils.spinner.hideSpinner();
             })
             .catch((err) => {
                 console.error(err);

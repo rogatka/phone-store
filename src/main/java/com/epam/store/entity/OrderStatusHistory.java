@@ -72,15 +72,12 @@ public class OrderStatusHistory {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OrderStatusHistory that = (OrderStatusHistory) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(order, that.order) &&
-                orderStatus == that.orderStatus &&
-                Objects.equals(timeStamp, that.timeStamp);
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, order, orderStatus, timeStamp);
+        return Objects.hash(id);
     }
 
     @Override

@@ -38,7 +38,6 @@ import static org.mockito.Mockito.when;
 
 @ContextConfiguration(classes = {ConfigService.class})
 @ExtendWith(SpringExtension.class)
-//@WebAppConfiguration
 public class TestAccountService {
     @Mock
     private OrderDAO orderDAO;
